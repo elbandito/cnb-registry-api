@@ -20,7 +20,7 @@ let index = buildSearchIndex(allBuildpacks);
       allBuildpacks = getNormalisedRegistry(REPO_PATH);
       index = buildSearchIndex(allBuildpacks);
     }
-    await sleep(15000);
+    await sleep(60000);
   }
 })();
 
