@@ -31,9 +31,9 @@ function sleep(ms) {
 /* GET buildpacks. */
 router.get('/', function(req, res, next) {
   (async () => {
-    const query = req.query.query;
-    if (query) {
-      res.send(index.search(query));
+    const matches = req.query.matches;
+    if (matches) {
+      res.send(index.search(matches));
     } else {
       res.send(allBuildpacks);
     }
@@ -83,10 +83,6 @@ function buildSearchIndex(buildpacks) {
   const searchIndex = new jssearch.Search('addr');
   searchIndex.addIndex('ns');
   searchIndex.addIndex('name');
-  searchIndex.addIndex('version');
-  searchIndex.addIndex('yanked');
-  searchIndex.addIndex('addr');
-
   searchIndex.addDocuments(buildpacks);
 
   return searchIndex;
