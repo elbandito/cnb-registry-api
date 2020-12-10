@@ -62,7 +62,10 @@ function getNormalisedRegistry(registryPath) {
         const registryFile = fs.readFileSync(file, 'UTF-8');
         registry = registry.concat(registryFile.split(os.EOL).map(line => {
           try {
-            return JSON.parse(line);
+            return Object.assign(JSON.parse(line), {
+              description: '',
+              license: ''
+            });
           } catch (error) {
             // Do nothing
           }
