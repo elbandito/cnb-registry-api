@@ -36,27 +36,32 @@ type stack struct {
 }
 
 func main() {
-	fmt.Println("at=main msg='Building cacher cache'")
+	//fmt.Println("at=main level=debug msg='Building cacher cache'")
 
 	if len(os.Args) != 2 {
-		panic("invalid inputs: expected entry json")
+		fmt.Printf("at=index_buildpack level=error msg='invalid inputs: expected entry json'")
+		os.Exit(1)
 	}
 	rawEntry := os.Args[1]
 
 	var e Entry
 	if err := json.Unmarshal([]byte(rawEntry), &e); err != nil {
-		panic("invalid inputs: unable to parse entry json")
+		fmt.Printf("at=index_buildpack level=error msg='invalid inputs: unable to parse entry json'")
+		os.Exit(1)
 	}
 
 	m, err := FetchBuildpackConfig(e, remote.Image)
 	if err != nil {
-		panic(err)
+		fmt.Printf("at=index_buildpack level=warn msg='unable to fetch config for %s/%s@%s'", e.Namespace, e.Name, e.Version)
+		os.Exit(0)
 	}
 
 	err = UpdateOrInsertConfig(m)
 	if err != nil {
 		panic(err)
 	}
+
+	fmt.Printf("at=index_buildpack level=info msg='updated index for %s/%s@%s'", e.Namespace, e.Name, e.Version)
 }
 
 func FetchBuildpackConfig(e Entry, imageFn ImageFunction) (Metadata, error) {

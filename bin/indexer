@@ -7,6 +7,8 @@ const os = require('os');
 
 const REPO_PATH = 'tmp';
 
+// require('events').EventEmitter.defaultMaxListeners = 100;
+
 // Poll the repo every 60 seconds
 (async () => {
     while (true) {
@@ -15,7 +17,7 @@ const REPO_PATH = 'tmp';
         if (success) {
             console.log('at=main level=info msg="building index config data cache"');
             getNormalisedRegistry(REPO_PATH).forEach(buildpack => {
-                buildIndex(JSON.stringify(buildpack))
+                buildIndex(buildpack)
             })
             console.log('at=main level=debug msg="done building index config data cache"');
         } else {
@@ -29,9 +31,12 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function buildIndex(entry) {
+async function buildIndex(entry) {
     try {
-        execa('./index_buildpack', [entry]);
+        const {stdout} = await execa('./index_buildpack', [JSON.stringify(entry)])
+        if (stdout.trim()) {
+            console.log(stdout.trim());
+        }
     } catch (err) {
         console.error(err);
     }
