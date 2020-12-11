@@ -15,7 +15,7 @@ const REPO_PATH = 'tmp';
         if (success) {
             console.log('at=main level=info msg="building index config data cache"');
             getNormalisedRegistry(REPO_PATH).forEach(buildpack => {
-                console.log(JSON.stringify(buildpack))
+                buildIndex(JSON.stringify(buildpack))
             })
             console.log('at=main level=debug msg="done building index config data cache"');
         } else {
@@ -27,6 +27,14 @@ const REPO_PATH = 'tmp';
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function buildIndex(entry) {
+    try {
+        execa('./index_buildpack', [entry]);
+    } catch (err) {
+        console.error(err);
+    }
 }
 
 function getNormalisedRegistry(registryPath) {

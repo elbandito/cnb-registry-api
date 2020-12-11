@@ -111,5 +111,7 @@ func UpdateOrInsertConfig(m Metadata) error {
 
 	// TODO
 
+	println(m.ID, m.Version)
+
 	return nil
 }
