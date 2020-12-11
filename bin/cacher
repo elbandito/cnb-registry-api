@@ -2,6 +2,8 @@
 
 const fs = require('fs');
 const execa = require('execa');
+const path = require('path');
+const os = require('os');
 
 const REPO_PATH = 'tmp';
 
