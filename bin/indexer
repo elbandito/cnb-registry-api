@@ -33,7 +33,7 @@ function sleep(ms) {
 
 async function buildIndex(entry) {
     try {
-        const {stdout} = await execa('./index_buildpack', [JSON.stringify(entry)])
+        const {stdout} = await execa('./bin/index-buildpack', [JSON.stringify(entry)])
         if (stdout.trim()) {
             console.log(stdout.trim());
         }

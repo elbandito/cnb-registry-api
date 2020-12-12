@@ -1,9 +1,9 @@
-package index_buildpack_test
+package main_test
 
 import (
 	"errors"
 	"fmt"
-	ib "github.com/buildpacks/cnb-registry-api"
+	ib "github.com/buildpacks/cnb-registry-api/cmd/index-buildpack"
 	"github.com/buildpacks/cnb-registry-api/internal/mocks"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/sclevine/spec/report"
