@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/lib/pq"
 	"io/ioutil"
 	"os"
 
@@ -33,8 +34,13 @@ type Metadata struct {
 	Version     string
 	Homepage    string
 	Description string
-	License     string
+	Licenses    []license
 	Stacks      []stack
+}
+
+type license struct {
+	Type string
+	URL  string
 }
 
 type stack struct {
@@ -156,13 +162,23 @@ func FetchBuildpackConfig(e Entry, imageFn ImageFunction) (Metadata, error) {
 
 func UpdateOrInsertConfig(db *sql.DB, e Entry, m Metadata) error {
 	upsert := `
-insert into buildpacks (namespace, bp_name, version, addr, description, license) 
-values($1, $2, $3, $4, $5, $6)
+insert into buildpacks (namespace, bp_name, version, addr, homepage, description, licenses, stacks) 
+values($1, $2, $3, $4, $5, $6, $7, $8)
 ON CONFLICT (namespace, bp_name, version)
 DO 
-   UPDATE SET description = $5, license = $6;
+   UPDATE SET homepage = $5, description = $6, licenses = $7, stacks = $8;
 `
-	_, err := db.Exec(upsert, e.Namespace, e.Name, e.Version, e.Address, m.Description, m.License)
+	var stacks []string
+	for _, s := range m.Stacks {
+		stacks = append(stacks, s.ID)
+	}
+
+	var licenses []string
+	for _, s := range m.Licenses {
+		stacks = append(stacks, s.Type)
+	}
+
+	_, err := db.Exec(upsert, e.Namespace, e.Name, e.Version, e.Address, m.Homepage, m.Description, pq.Array(licenses), pq.Array(stacks))
 	if err != nil {
 		return err
 	}

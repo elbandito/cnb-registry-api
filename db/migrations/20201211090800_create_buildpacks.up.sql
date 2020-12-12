@@ -6,8 +6,10 @@ CREATE TABLE IF NOT EXISTS buildpacks(
    bp_name VARCHAR (250) NOT NULL,
    version VARCHAR (250) NOT NULL,
    addr VARCHAR (250) NOT NULL,
-   description TEXT NOT NULL,
-   license TEXT NOT NULL,
+   description TEXT,
+   homepage TEXT,
+   licenses TEXT[],
+   stacks TEXT[],
    PRIMARY KEY (id),
    CONSTRAINT buildpack_version UNIQUE (namespace,bp_name,version)
 );
