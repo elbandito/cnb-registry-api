@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 
 	"github.com/google/go-containerregistry/pkg/name"
@@ -35,32 +36,63 @@ type stack struct {
 	ID string
 }
 
+type IndexRecord struct {
+	entry    Entry
+	metadata Metadata
+	err      error
+}
+
 func main() {
 	if len(os.Args) != 2 {
-		fmt.Printf("at=index_buildpack level=error msg='invalid inputs: expected entry json'")
-		os.Exit(1)
-	}
-	rawEntry := os.Args[1]
-
-	var e Entry
-	if err := json.Unmarshal([]byte(rawEntry), &e); err != nil {
-		fmt.Printf("at=index_buildpack level=error msg='invalid inputs: unable to parse entry json' reason='%s'", err)
+		fmt.Println("at=index_buildpack level=error msg='invalid inputs: expected entry json'")
 		os.Exit(1)
 	}
 
-	m, err := FetchBuildpackConfig(e, remote.Image)
+	data, err := ioutil.ReadFile(os.Args[1])
 	if err != nil {
-		fmt.Printf("at=index_buildpack level=warn msg='failed to fetch config for %s/%s@%s' reason='%s'", e.Namespace, e.Name, e.Version, err)
-		os.Exit(0)
+		fmt.Printf("at=index_buildpack level=error msg='invalid inputs: unable to read file' file='%s' reason='%s'\n", os.Args[1], err)
+		os.Exit(1)
 	}
 
-	err = UpdateOrInsertConfig(m)
-	if err != nil {
-		fmt.Printf("at=index_buildpack level=warn msg='failed to update index for %s/%s@%s' reason='%s'", e.Namespace, e.Name, e.Version, err)
-		os.Exit(0)
+	var entries []Entry
+	if err := json.Unmarshal(data, &entries); err != nil {
+		fmt.Printf("at=index_buildpack level=error msg='invalid inputs: unable to parse entry json' reason='%s'\n", err)
+		os.Exit(1)
 	}
 
-	fmt.Printf("at=index_buildpack level=info msg='updated index for %s/%s@%s'", e.Namespace, e.Name, e.Version)
+	buildIndex(entries)
+	fmt.Println("at=index_buildpack level=info msg='done updating index'")
+}
+
+func buildIndex(entries []Entry) {
+	ch := make(chan IndexRecord)
+
+	for _, e := range entries {
+		go handleMetadata(e, remote.Image, ch)
+	}
+
+	for range entries {
+		i := <-ch
+		if i.err != nil {
+			fmt.Printf("at=handleMetadata level=warn msg='failed to fetch config' entry='%s/%s@%s' reason='%s'\n", i.entry.Namespace, i.entry.Name, i.entry.Version, i.err)
+		} else {
+			err := UpdateOrInsertConfig(i.entry, i.metadata)
+			if err != nil {
+				fmt.Printf("at=buildIndex level=warn msg='failed to update index' entry='%s/%s@%s' reason='%s'\n", i.entry.Namespace, i.entry.Name, i.entry.Version, err)
+			} else {
+				fmt.Printf("at=buildIndex level=info msg='updated index' entry='%s/%s@%s'\n", i.entry.Namespace, i.entry.Name, i.entry.Version)
+			}
+		}
+	}
+}
+
+func handleMetadata(e Entry, imageFn ImageFunction, ch chan<- IndexRecord) {
+	m, err := FetchBuildpackConfig(e, imageFn)
+	ch <- IndexRecord{
+		metadata: m,
+		entry:    e,
+		err:      err,
+	}
 }
 
 func FetchBuildpackConfig(e Entry, imageFn ImageFunction) (Metadata, error) {
@@ -111,11 +143,11 @@ func FetchBuildpackConfig(e Entry, imageFn ImageFunction) (Metadata, error) {
 	return m, nil
 }
 
-func UpdateOrInsertConfig(m Metadata) error {
+func UpdateOrInsertConfig(e Entry, m Metadata) error {
 
 	// TODO
 
-	println(m.ID, m.Version)
+	//println(m.ID, m.Version)
 
 	return nil
 }

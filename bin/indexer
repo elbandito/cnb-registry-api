@@ -7,23 +7,22 @@ const os = require('os');
 
 const REPO_PATH = 'tmp';
 
-// require('events').EventEmitter.defaultMaxListeners = 100;
-
 // Poll the repo every 60 seconds
 (async () => {
+    let indexPath = path.join(REPO_PATH, "index.js")
     while (true) {
         console.log('at=main level=info msg="trying to update registry-index repo"');
         const success = await createUpdateRepo(REPO_PATH);
         if (success) {
             console.log('at=main level=info msg="building index config data cache"');
-            getNormalisedRegistry(REPO_PATH).forEach(buildpack => {
-                buildIndex(buildpack)
-            })
+            fs.writeFileSync(indexPath, JSON.stringify(getNormalisedRegistry(REPO_PATH)))
+            console.log('at=main level=info msg="serialized index to file"');
+            await buildIndex(indexPath)
             console.log('at=main level=debug msg="done building index config data cache"');
         } else {
             console.log('at=main level=warn msg="failed to update registry-index repo"');
         }
-        await sleep(60000);
+        await sleep(300000); // wait 5 minutes
     }
 })();
 
@@ -31,12 +30,12 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function buildIndex(entry) {
+async function buildIndex(indexPath) {
     try {
-        const {stdout} = await execa('./bin/index-buildpack', [JSON.stringify(entry)])
-        if (stdout.trim()) {
-            console.log(stdout.trim());
-        }
+        let subProc = execa('./bin/index-buildpack', [indexPath])
+        subProc.stdout.pipe(process.stdout);
+        subProc.stderr.pipe(process.stderr);
+        await subProc
     } catch (err) {
         console.error(err);
     }
@@ -101,4 +100,3 @@ async function createUpdateRepo(repoPath) {
 
     return true;
 }
-
