@@ -21,7 +21,8 @@ func main() {
 	println("Running migrations...")
 	err = m.Up()
 	if err != nil {
-		panic(err)
+		fmt.Printf("Migrations failed: %s\n", err)
+	} else {
+		println("Migrations succeeded.")
 	}
-	println("Migrations finished.")
 }
