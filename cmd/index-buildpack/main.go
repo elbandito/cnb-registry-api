@@ -93,7 +93,7 @@ func buildIndex(entries []Entry) {
 		if i.err != nil {
 			fmt.Printf("at=handleMetadata level=warn msg='failed to fetch config' entry='%s/%s@%s' reason='%s'\n", i.entry.Namespace, i.entry.Name, i.entry.Version, i.err)
 		} else {
-			err := UpdateOrInsertConfig(db, i.entry, i.metadata)
+			err := UpsertMetadata(db, i.entry, i.metadata)
 			if err != nil {
 				fmt.Printf("at=buildIndex level=warn msg='failed to update index' entry='%s/%s@%s' reason='%s'\n", i.entry.Namespace, i.entry.Name, i.entry.Version, err)
 			} else {
@@ -160,7 +160,7 @@ func FetchBuildpackConfig(e Entry, imageFn ImageFunction) (Metadata, error) {
 	return m, nil
 }
 
-func UpdateOrInsertConfig(db *sql.DB, e Entry, m Metadata) error {
+func UpsertMetadata(db *sql.DB, e Entry, m Metadata) error {
 	upsert := `
 insert into buildpacks (namespace, bp_name, version, addr, homepage, description, licenses, stacks) 
 values($1, $2, $3, $4, $5, $6, $7, $8)
