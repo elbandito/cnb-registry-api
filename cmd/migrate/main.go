@@ -21,8 +21,8 @@ func main() {
 	println("Running migrations...")
 	err = m.Up()
 	if err != nil {
-		fmt.Printf("Migrations failed: %s\n", err)
+		fmt.Printf("at=migrate status=skipped reason='%s'\n", err)
 	} else {
-		println("Migrations succeeded.")
+		println("at=migrate status=done")
 	}
 }
