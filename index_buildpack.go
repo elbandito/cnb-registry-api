@@ -36,8 +36,6 @@ type stack struct {
 }
 
 func main() {
-	//fmt.Println("at=main level=debug msg='Building cacher cache'")
-
 	if len(os.Args) != 2 {
 		fmt.Printf("at=index_buildpack level=error msg='invalid inputs: expected entry json'")
 		os.Exit(1)
@@ -46,19 +44,20 @@ func main() {
 
 	var e Entry
 	if err := json.Unmarshal([]byte(rawEntry), &e); err != nil {
-		fmt.Printf("at=index_buildpack level=error msg='invalid inputs: unable to parse entry json'")
+		fmt.Printf("at=index_buildpack level=error msg='invalid inputs: unable to parse entry json' reason='%s'", err)
 		os.Exit(1)
 	}
 
 	m, err := FetchBuildpackConfig(e, remote.Image)
 	if err != nil {
-		fmt.Printf("at=index_buildpack level=warn msg='unable to fetch config for %s/%s@%s'", e.Namespace, e.Name, e.Version)
+		fmt.Printf("at=index_buildpack level=warn msg='failed to fetch config for %s/%s@%s' reason='%s'", e.Namespace, e.Name, e.Version, err)
 		os.Exit(0)
 	}
 
 	err = UpdateOrInsertConfig(m)
 	if err != nil {
-		panic(err)
+		fmt.Printf("at=index_buildpack level=warn msg='failed to update index for %s/%s@%s' reason='%s'", e.Namespace, e.Name, e.Version, err)
+		os.Exit(0)
 	}
 
 	fmt.Printf("at=index_buildpack level=info msg='updated index for %s/%s@%s'", e.Namespace, e.Name, e.Version)
