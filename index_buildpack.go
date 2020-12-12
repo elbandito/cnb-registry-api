@@ -1,4 +1,4 @@
-package main
+package index_buildpack
 
 import (
 	"encoding/json"

@@ -1,9 +1,9 @@
-package main_test
+package index_buildpack_test
 
 import (
 	"errors"
 	"fmt"
-	main "github.com/buildpacks/cnb-registry-api"
+	ib "github.com/buildpacks/cnb-registry-api"
 	"github.com/buildpacks/cnb-registry-api/internal/mocks"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/sclevine/spec/report"
@@ -25,18 +25,18 @@ func TestCacher(t *testing.T) {
 		)
 
 		it("fails if address is not a digest image reference", func() {
-			entry := main.Entry{
+			entry := ib.Entry{
 				Address: "test-host/test-repository:test-version",
 			}
 
-			_, err := main.FetchBuildpackConfig(entry, f.Execute)
+			_, err := ib.FetchBuildpackConfig(entry, f.Execute)
 			Expect(err).
 				To(MatchError(errors.New(fmt.Sprintf("address is not a digest: %s", entry.Address))))
 		})
 
 		context("valid address", func() {
 			var (
-				entry = main.Entry{
+				entry = ib.Entry{
 					Namespace: "example",
 					Name: "test-id",
 					Version: "test-version",
@@ -54,7 +54,7 @@ func TestCacher(t *testing.T) {
 					},
 				}, nil)
 
-				_, err := main.FetchBuildpackConfig(entry, f.Execute)
+				_, err := ib.FetchBuildpackConfig(entry, f.Execute)
 				Expect(err).
 					To(MatchError(errors.New(fmt.Sprintf("could not find metadata label for %s", entry.Address))))
 			})
@@ -62,11 +62,11 @@ func TestCacher(t *testing.T) {
 			it("fails if id does not match", func() {
 				i.ConfigFileReturns(&v1.ConfigFile{
 					Config: v1.Config{
-						Labels: map[string]string{main.MetadataLabel: `{ "id": "another-id", "version": "test-version" }`},
+						Labels: map[string]string{ib.MetadataLabel: `{ "id": "another-id", "version": "test-version" }`},
 					},
 				}, nil)
 
-				_, err := main.FetchBuildpackConfig(entry, f.Execute)
+				_, err := ib.FetchBuildpackConfig(entry, f.Execute)
 				Expect(err).
 					To(MatchError(errors.New(fmt.Sprintf("invalid ID for %s", entry.Address))))
 			})
@@ -74,11 +74,11 @@ func TestCacher(t *testing.T) {
 			it("fails if version does not match", func() {
 				i.ConfigFileReturns(&v1.ConfigFile{
 					Config: v1.Config{
-						Labels: map[string]string{main.MetadataLabel: `{ "id": "example/test-id", "version": "another-version" }`},
+						Labels: map[string]string{ib.MetadataLabel: `{ "id": "example/test-id", "version": "another-version" }`},
 					},
 				}, nil)
 
-				_, err := main.FetchBuildpackConfig(entry, f.Execute)
+				_, err := ib.FetchBuildpackConfig(entry, f.Execute)
 				Expect(err).
 					To(MatchError(errors.New(fmt.Sprintf("invalid version for %s", entry.Address))))
 			})
@@ -86,11 +86,11 @@ func TestCacher(t *testing.T) {
 			it("passes if version and id match", func() {
 				i.ConfigFileReturns(&v1.ConfigFile{
 					Config: v1.Config{
-						Labels: map[string]string{main.MetadataLabel: `{ "id": "example/test-id", "version": "test-version" }`},
+						Labels: map[string]string{ib.MetadataLabel: `{ "id": "example/test-id", "version": "test-version" }`},
 					},
 				}, nil)
 
-				_, err := main.FetchBuildpackConfig(entry, f.Execute)
+				_, err := ib.FetchBuildpackConfig(entry, f.Execute)
 				Expect(err).To(Succeed())
 			})
 		})
