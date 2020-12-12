@@ -18,8 +18,10 @@ func main() {
 		panic(err)
 	}
 
+	println("Running migrations...")
 	err = m.Up()
 	if err != nil {
 		panic(err)
 	}
+	println("Migrations finished.")
 }
