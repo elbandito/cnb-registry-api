@@ -1,5 +1,5 @@
 node_modules
 tmp
 .idea/
-bin/index-buildpack
+bin/index-buildpacks
 bin/migrate

@@ -32,7 +32,7 @@ function sleep(ms) {
 
 async function buildIndex(indexPath) {
     try {
-        let subProc = execa('./bin/index-buildpack', [indexPath])
+        let subProc = execa('./bin/index-buildpacks', [indexPath])
         subProc.stdout.pipe(process.stdout);
         subProc.stderr.pipe(process.stderr);
         await subProc
