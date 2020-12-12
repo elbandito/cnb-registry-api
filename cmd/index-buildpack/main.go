@@ -1,11 +1,14 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
+
+	_ "github.com/lib/pq"
 
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1"
@@ -26,10 +29,12 @@ type Entry struct {
 }
 
 type Metadata struct {
-	ID       string
-	Version  string
-	Homepage string
-	Stacks   []stack
+	ID          string
+	Version     string
+	Homepage    string
+	Description string
+	License     string
+	Stacks      []stack
 }
 
 type stack struct {
@@ -65,8 +70,14 @@ func main() {
 }
 
 func buildIndex(entries []Entry) {
-	ch := make(chan IndexRecord)
+	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
+	if err != nil {
+		fmt.Printf("at=buildIndex level=error msg='failed to connect to database' reason='%s'\n", err)
+		os.Exit(1)
+	}
+	defer db.Close()
 
+	ch := make(chan IndexRecord)
 	for _, e := range entries {
 		go handleMetadata(e, remote.Image, ch)
 	}
@@ -76,7 +87,7 @@ func buildIndex(entries []Entry) {
 		if i.err != nil {
 			fmt.Printf("at=handleMetadata level=warn msg='failed to fetch config' entry='%s/%s@%s' reason='%s'\n", i.entry.Namespace, i.entry.Name, i.entry.Version, i.err)
 		} else {
-			err := UpdateOrInsertConfig(i.entry, i.metadata)
+			err := UpdateOrInsertConfig(db, i.entry, i.metadata)
 			if err != nil {
 				fmt.Printf("at=buildIndex level=warn msg='failed to update index' entry='%s/%s@%s' reason='%s'\n", i.entry.Namespace, i.entry.Name, i.entry.Version, err)
 			} else {
@@ -143,11 +154,18 @@ func FetchBuildpackConfig(e Entry, imageFn ImageFunction) (Metadata, error) {
 	return m, nil
 }
 
-func UpdateOrInsertConfig(e Entry, m Metadata) error {
-
-	// TODO
-
-	//println(m.ID, m.Version)
+func UpdateOrInsertConfig(db *sql.DB, e Entry, m Metadata) error {
+	upsert := `
+insert into buildpacks (namespace, bp_name, version, addr, description, license) 
+values($1, $2, $3, $4, $5, $6)
+ON CONFLICT (namespace, bp_name, version)
+DO 
+   UPDATE SET description = $5, license = $6;
+`
+	_, err := db.Exec(upsert, e.Namespace, e.Name, e.Version, e.Address, m.Description, m.License)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

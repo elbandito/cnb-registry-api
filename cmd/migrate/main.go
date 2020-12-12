@@ -10,10 +10,7 @@ import (
 )
 
 func main() {
-	m, err := migrate.New(
-		"file://db/migrations",
-		fmt.Sprintf("%s?sslmode=require", os.Getenv("DATABASE_URL")))
-
+	m, err := migrate.New("file://db/migrations", os.Getenv("DATABASE_URL"))
 	if err != nil {
 		panic(err)
 	}

@@ -7,6 +7,7 @@ require (
 	github.com/containerd/continuity v0.0.0-20201208142359-180525291bb7 // indirect
 	github.com/golang-migrate/migrate/v4 v4.14.1
 	github.com/google/go-containerregistry v0.2.1
+	github.com/lib/pq v1.8.0
 	github.com/onsi/gomega v1.9.0
 	github.com/opencontainers/runc v0.1.1 // indirect
 	github.com/pkg/errors v0.9.1
