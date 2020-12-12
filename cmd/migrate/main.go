@@ -18,7 +18,7 @@ func main() {
 		panic(err)
 	}
 
-	println("Running migrations...")
+	println("at=migrate status=starting")
 	err = m.Up()
 	if err != nil {
 		fmt.Printf("at=migrate status=skipped reason='%s'\n", err)
