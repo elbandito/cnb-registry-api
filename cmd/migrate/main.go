@@ -2,19 +2,24 @@ package main
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	"os"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 func main() {
 	m, err := migrate.New(
-		"db/migrations",
-		fmt.Sprintf("%s?sslmode=enable", os.Getenv("DATABASE_URL")))
+		"file://db/migrations",
+		fmt.Sprintf("%s?sslmode=disable", os.Getenv("DATABASE_URL")))
 
 	if err != nil {
 		panic(err)
 	}
 
-	m.Up()
+	err = m.Up()
+	if err != nil {
+		panic(err)
+	}
 }
