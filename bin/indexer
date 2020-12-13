@@ -7,7 +7,6 @@ const os = require('os');
 
 const REPO_PATH = 'tmp';
 
-// Poll the repo every 60 seconds
 (async () => {
     let indexPath = path.join(REPO_PATH, "index.js")
     while (true) {
