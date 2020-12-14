@@ -117,7 +117,6 @@ func FetchBuildpackConfig(e Entry, imageFn ImageFunction) (Metadata, error) {
 	}
 
 	if _, ok := ref.(name.Digest); !ok {
-
 		return Metadata{}, errors.New(fmt.Sprintf("address is not a digest: %s", e.Address))
 	}
 
@@ -160,8 +159,8 @@ func FetchBuildpackConfig(e Entry, imageFn ImageFunction) (Metadata, error) {
 
 func UpsertMetadata(db *sql.DB, e Entry, m Metadata) error {
 	upsert := `
-insert into buildpacks (namespace, name, version, addr, homepage, description, licenses, stacks)
-values($1, $2, $3, $4, $5, $6, $7, $8)
+INSERT INTO buildpacks (namespace, name, version, addr, homepage, description, licenses, stacks)
+VALUES($1, $2, $3, $4, $5, $6, $7, $8)
 ON CONFLICT (namespace, name, version)
 DO
    UPDATE SET homepage = $5, description = $6, licenses = $7, stacks = $8;
