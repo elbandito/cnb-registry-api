@@ -5,21 +5,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/lib/pq"
 	"io/ioutil"
 	"os"
 
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
 
 	"github.com/google/go-containerregistry/pkg/name"
-	"github.com/google/go-containerregistry/pkg/v1"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 )
 
 const MetadataLabel = "io.buildpacks.buildpackage.metadata"
 
-//go:generate mockery --all --output=internal/mocks --case=underscore
-
+//go:generate mockery --all --output=../../internal/mocks --case=underscore
 type ImageFunction func(name.Reference, ...remote.Option) (v1.Image, error)
 
 type Entry struct {
@@ -162,10 +160,10 @@ func FetchBuildpackConfig(e Entry, imageFn ImageFunction) (Metadata, error) {
 
 func UpsertMetadata(db *sql.DB, e Entry, m Metadata) error {
 	upsert := `
-insert into buildpacks (namespace, bp_name, version, addr, homepage, description, licenses, stacks) 
+insert into buildpacks (namespace, name, version, addr, homepage, description, licenses, stacks)
 values($1, $2, $3, $4, $5, $6, $7, $8)
-ON CONFLICT (namespace, bp_name, version)
-DO 
+ON CONFLICT (namespace, name, version)
+DO
    UPDATE SET homepage = $5, description = $6, licenses = $7, stacks = $8;
 `
 	var stacks []string
